@@ -1,5 +1,7 @@
 export default function EmployeeListPage() {
-    return <>
-        <i>Todo employees</i>
+  return (
+    <>
+      <i>Todo employees</i>
     </>
+  );
 }

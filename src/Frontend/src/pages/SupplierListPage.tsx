@@ -9,8 +9,8 @@ import {
   Typography,
   styled,
   tableCellClasses,
-} from "@mui/material";
-import { useEffect, useState } from "react";
+} from '@mui/material';
+import { useEffect, useState } from 'react';
 
 interface SupplierListQuery {
   id: number;
@@ -24,23 +24,23 @@ export default function SupplierListPage() {
   const [list, setList] = useState<SupplierListQuery[]>([]);
 
   useEffect(() => {
-    fetch("/api/suppliers/list")
-      .then((response) => {
+    fetch('/api/suppliers/list')
+      .then(response => {
         return response.json();
       })
-      .then((data) => {
+      .then(data => {
         setList(data as SupplierListQuery[]);
       });
   }, []);
 
   return (
     <>
-      <Typography variant="h4" sx={{ textAlign: "center", mt: 4, mb: 4 }}>
+      <Typography variant='h4' sx={{ textAlign: 'center', mt: 4, mb: 4 }}>
         Suppliers
       </Typography>
 
       <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+        <Table sx={{ minWidth: 650 }} aria-label='simple table'>
           <TableHead>
             <TableRow>
               <StyledTableHeadCell>Name</StyledTableHeadCell>
@@ -50,11 +50,8 @@ export default function SupplierListPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {list.map((row) => (
-              <TableRow
-                key={row.id}
-                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-              >
+            {list.map(row => (
+              <TableRow key={row.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                 <TableCell>{row.name}</TableCell>
                 <TableCell>{row.address}</TableCell>
                 <TableCell>{row.email}</TableCell>

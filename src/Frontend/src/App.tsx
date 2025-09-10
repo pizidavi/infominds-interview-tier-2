@@ -1,8 +1,8 @@
-import { Container } from "@mui/material";
-import AppRoutes from "./routing/AppRouter";
-import ShellHeader from "./routing/ShellHeader";
-import CssBaseline from "@mui/material/CssBaseline";
-import { BrowserRouter as Router } from "react-router-dom";
+import { Container } from '@mui/material';
+import AppRoutes from './routing/AppRouter';
+import ShellHeader from './routing/ShellHeader';
+import CssBaseline from '@mui/material/CssBaseline';
+import { BrowserRouter as Router } from 'react-router-dom';
 
 function App() {
   return (
@@ -10,8 +10,8 @@ function App() {
       <CssBaseline />
       <Router>
         <ShellHeader />
-        <Container sx={{pl:1}}>
-        <AppRoutes />
+        <Container sx={{ pl: 1 }}>
+          <AppRoutes />
         </Container>
       </Router>
     </>
