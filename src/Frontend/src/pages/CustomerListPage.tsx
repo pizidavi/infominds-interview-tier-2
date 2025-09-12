@@ -1,4 +1,5 @@
 import {
+  Button,
   Input,
   Paper,
   Table,
@@ -11,15 +12,32 @@ import {
   styled,
   tableCellClasses,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { CustomerListQuery } from '../types/entities';
 import { getCustomers } from '../api/CustomersManager';
 import { debounce } from '../utils/utils';
+import * as XLSX from 'xlsx';
 
 export default function CustomerListPage() {
   // State
   const [list, setList] = useState<CustomerListQuery[]>([]);
   const [searchText, setSearchText] = useState<string>();
+
+  // Callbacks
+  const handleExportExcel = useCallback(() => {
+    const data = list.map(row => ({
+      Name: row.name,
+      Address: row.address,
+      Email: row.email,
+      Phone: row.phone,
+      IBAN: row.iban,
+      Category: row.category?.description ?? '',
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Customers');
+    XLSX.writeFile(workbook, 'customers.xlsx');
+  }, [list]);
 
   // Effects
   useEffect(() => {
@@ -46,13 +64,16 @@ export default function CustomerListPage() {
         Customers
       </Typography>
 
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
         <Input
           value={searchText}
           onChange={e => setSearchText(e.target.value)}
           placeholder='Search customers...'
           fullWidth
         />
+        <Button variant='outlined' onClick={handleExportExcel}>
+          Export
+        </Button>
       </div>
 
       <TableContainer component={Paper}>
