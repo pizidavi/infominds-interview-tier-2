@@ -10,3 +10,11 @@ export interface CustomerListQueryResponse {
     description: string;
   } | null;
 }
+
+export interface SupplierListQueryResponse {
+  id: number;
+  name: string;
+  address: string;
+  email: string;
+  phone: string;
+}

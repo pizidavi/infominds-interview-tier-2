@@ -1,5 +1,6 @@
 import {
   Button,
+  CircularProgress,
   Input,
   Paper,
   Table,
@@ -9,23 +10,30 @@ import {
   TableHead,
   TableRow,
   Typography,
+  debounce,
   styled,
   tableCellClasses,
 } from '@mui/material';
-import { useCallback, useEffect, useState } from 'react';
-import { CustomerListQuery } from '../types/entities';
-import { getCustomers } from '../api/CustomersManager';
-import { debounce } from '../utils/utils';
+import { useCallback, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import * as XLSX from 'xlsx';
+import { getCustomers } from '../api/CustomersManager';
 
 export default function CustomerListPage() {
   // State
-  const [list, setList] = useState<CustomerListQuery[]>([]);
-  const [searchText, setSearchText] = useState<string>();
+  const [searchText, setSearchText] = useState<string>('');
+
+  // Api
+  const customersQuery = useQuery({
+    queryKey: ['customers', searchText],
+    queryFn: options => getCustomers(searchText, options),
+  });
 
   // Callbacks
   const handleExportExcel = useCallback(() => {
-    const data = list.map(row => ({
+    if (!customersQuery.data) return;
+
+    const data = customersQuery.data.map(row => ({
       Name: row.name,
       Address: row.address,
       Email: row.email,
@@ -37,25 +45,7 @@ export default function CustomerListPage() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Customers');
     XLSX.writeFile(workbook, 'customers.xlsx');
-  }, [list]);
-
-  // Effects
-  useEffect(() => {
-    const controller = new AbortController();
-    debounce(
-      () =>
-        getCustomers(searchText, { signal: controller.signal })
-          .then(data => setList(data))
-          .catch(err => {
-            if (err.name === 'AbortError') return;
-            console.error('Error fetching customers', err);
-          }),
-      300,
-    )();
-    return () => {
-      controller.abort();
-    };
-  }, [searchText]);
+  }, [customersQuery.data]);
 
   // Render
   return (
@@ -66,8 +56,7 @@ export default function CustomerListPage() {
 
       <div style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
         <Input
-          value={searchText}
-          onChange={e => setSearchText(e.target.value)}
+          onChange={e => debounce(() => setSearchText(e.target.value), 500)()}
           placeholder='Search customers...'
           fullWidth
         />
@@ -89,16 +78,36 @@ export default function CustomerListPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {list.map(row => (
-              <TableRow key={row.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                <TableCell>{row.name}</TableCell>
-                <TableCell>{row.address}</TableCell>
-                <TableCell>{row.email}</TableCell>
-                <TableCell>{row.phone}</TableCell>
-                <TableCell>{row.iban}</TableCell>
-                <TableCell>{row.category?.description ?? ''}</TableCell>
+            {customersQuery.isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} align='center'>
+                  <CircularProgress />
+                </TableCell>
               </TableRow>
-            ))}
+            ) : customersQuery.isError ? (
+              <TableRow>
+                <TableCell colSpan={6} align='center'>
+                  Error loading customers.
+                </TableCell>
+              </TableRow>
+            ) : !customersQuery.data?.length ? (
+              <TableRow>
+                <TableCell colSpan={6} align='center'>
+                  No customers found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              customersQuery.data?.map(row => (
+                <TableRow key={row.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                  <TableCell>{row.name}</TableCell>
+                  <TableCell>{row.address}</TableCell>
+                  <TableCell>{row.email}</TableCell>
+                  <TableCell>{row.phone}</TableCell>
+                  <TableCell>{row.iban}</TableCell>
+                  <TableCell>{row.category?.description ?? ''}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>

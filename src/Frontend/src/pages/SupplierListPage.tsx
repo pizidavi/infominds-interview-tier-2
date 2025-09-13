@@ -1,4 +1,5 @@
 import {
+  CircularProgress,
   Paper,
   Table,
   TableBody,
@@ -10,29 +11,17 @@ import {
   styled,
   tableCellClasses,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
-
-interface SupplierListQuery {
-  id: number;
-  name: string;
-  address: string;
-  email: string;
-  phone: string;
-}
+import { getSuppliers } from '../api/SuppliersManager';
+import { useQuery } from '@tanstack/react-query';
 
 export default function SupplierListPage() {
-  const [list, setList] = useState<SupplierListQuery[]>([]);
+  // Api
+  const suppliersQuery = useQuery({
+    queryKey: ['suppliers'],
+    queryFn: () => getSuppliers(),
+  });
 
-  useEffect(() => {
-    fetch('/api/suppliers/list')
-      .then(response => {
-        return response.json();
-      })
-      .then(data => {
-        setList(data as SupplierListQuery[]);
-      });
-  }, []);
-
+  // Render
   return (
     <>
       <Typography variant='h4' sx={{ textAlign: 'center', mt: 4, mb: 4 }}>
@@ -50,14 +39,34 @@ export default function SupplierListPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {list.map(row => (
-              <TableRow key={row.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                <TableCell>{row.name}</TableCell>
-                <TableCell>{row.address}</TableCell>
-                <TableCell>{row.email}</TableCell>
-                <TableCell>{row.phone}</TableCell>
+            {suppliersQuery.isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} align='center'>
+                  <CircularProgress />
+                </TableCell>
               </TableRow>
-            ))}
+            ) : suppliersQuery.isError ? (
+              <TableRow>
+                <TableCell colSpan={6} align='center'>
+                  Error loading customers.
+                </TableCell>
+              </TableRow>
+            ) : !suppliersQuery.data?.length ? (
+              <TableRow>
+                <TableCell colSpan={6} align='center'>
+                  No customers found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              suppliersQuery.data?.map(row => (
+                <TableRow key={row.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                  <TableCell>{row.name}</TableCell>
+                  <TableCell>{row.address}</TableCell>
+                  <TableCell>{row.email}</TableCell>
+                  <TableCell>{row.phone}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
